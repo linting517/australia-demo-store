@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-border Shop</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        body{
+            background-color:#f7f7f7;
+            color:#222;
+        }
+        header{
+            background:#1a1a1a;
+            color:#fff;
+            padding:20px 60px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            box-shadow:0 2px 8px rgba(0,0,0,0.15);
+        }
+        .logo{
+            font-size:26px;
+            font-weight:700;
+            letter-spacing:1px;
+        }
+        .cart-btn{
+            background:#2563eb;
+            border:none;
+            color:white;
+            padding:10px 18px;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+            transition:0.2s ease;
+        }
+        .cart-btn:hover{
+            background:#1d4ed8;
+        }
+        /* 视频Banner区域 */
+        .banner-wrap{
+            width:100%;
+            height:320px;
+            overflow:hidden;
+            position:relative;
+            background:#000;
+        }
+        .banner-video{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+        .banner-text{
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            font-size:36px;
+            font-weight:bold;
+            background:rgba(0,0,0,0.35);
+            pointer-events:none;
+        }
+        /* 分类栏 */
+        .category-bar{
+            background:#fff;
+            padding:16px 0;
+            box-shadow:0 2px 6px rgba(0,0,0,0.06);
+        }
+        .category-inner{
+            max-width:1200px;
+            margin:0 auto;
+            padding:0 20px;
+            display:flex;
+            gap:16px;
+        }
+        .category-tag{
+            padding:8px 16px;
+            border:1px solid #ddd;
+            border-radius:999px;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .category-tag.active{
+            background:#1a1a1a;
+            color:#fff;
+            border-color:#1a1a1a;
+        }
+        .category-tag:hover{
+            border-color:#1a1a1a;
+        }
+        .container{
+            max-width:1200px;
+            margin:40px auto;
+            padding:0 20px;
+        }
+        .title{
+            font-size:24px;
+            margin-bottom:30px;
+            font-weight:600;
+        }
+        .product-list{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap:28px;
+        }
+        .card{
+            background:#fff;
+            border-radius:12px;
+            overflow:hidden;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card:hover{
+            transform: translateY(-6px);
+            box-shadow:0 8px 20px rgba(0,0,0,0.12);
+        }
+        .card-img{
+            height:200px;
+            background:#eef2ff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#666;
+            font-size:14px;
+        }
+        .card-body{
+            padding:18px;
+        }
+        .card-body h4{
+            font-size:18px;
+            margin-bottom:8px;
+        }
+        .price{
+            color:#dc2626;
+            font-size:20px;
+            font-weight:600;
+            margin-bottom:16px;
+        }
+        .add-btn{
+            width:100%;
+            border:none;
+            background:#16a34a;
+            color:white;
+            padding:12px;
+            border-radius:8px;
+            font-size:15px;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .add-btn:hover{
+            background:#15803d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">MY STORE</div>
+        <button class="cart-btn" onclick="openCart()">Cart: <span id="cart-num">0</span></button>
+    </header>
+
+    <!-- 视频Banner -->
+    <div class="banner-wrap">
+        <!-- 这里src替换成你的视频地址，支持mp4 -->
+        <video class="banner-video" autoplay muted loop playsinline>
+            <source src="" type="video/mp4">
+            你的浏览器不支持视频播放
+        </video>
+        <div class="banner-text">🔥 Limited Discount Up To 40% OFF</div>
+    </div>
+
+    <!-- 分类栏 -->
+    <div class="category-bar">
+        <div class="category-inner">
+            <div class="category-tag active" data-cate="all">All</div>
+            <div class="category-tag" data-cate="bag">Bags</div>
+            <div class="category-tag" data-cate="watch">Watches</div>
+            <div class="category-tag" data-cate="glass">Sunglasses</div>
+            <div class="category-tag" data-cate="jewelry">Jewelry</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h3 class="title">Our Products</h3>
+        <div class="product-list" id="list"></div>
+    </div>
+
+    <script>
+        let cart = []
+        // 从后端接口拿商品数据
+        async function render(filterCate="all"){
+            let url = "/api/products"
+            if(filterCate !== "all"){
+                url += "?cate="+filterCate
+            }
+            const res = await fetch(url)
+            const products = await res.json()
+            const wrap = document.getElementById('list')
+            wrap.innerHTML = ''
+            products.forEach(p=>{
+                wrap.innerHTML += `
+                <div class="card">
+                    <div class="card-img">${p.img}</div>
+                    <div class="card-body">
+                        <h4>${p.name}</h4>
+                        <div class="price">$${p.price}</div>
+                        <button class="add-btn" onclick="addCart(${p.id})">Add to cart</button>
+                    </div>
+                </div>
+                `
+            })
+        }
+
+        // 分类点击事件
+        const cateTags = document.querySelectorAll('.category-tag')
+        cateTags.forEach(tag=>{
+            tag.onclick = ()=>{
+                cateTags.forEach(t=>t.classList.remove('active'))
+                tag.classList.add('active')
+                render(tag.dataset.cate)
+            }
+        })
+
+        function addCart(id){
+            fetch("/api/products").then(res=>res.json()).then(list=>{
+                const item = list.find(i=>i.id===id)
+                cart.push(item)
+                document.getElementById('cart-num').innerText = cart.length
+            })
+        }
+        function openCart(){
+            alert("Cart items：\n"+cart.map(i=>i.name+"  $"+i.price).join("\n"))
+        }
+
+        // 页面加载自动渲染
+        render()
+    </script>
+</body>
+</html>
